@@ -43,15 +43,35 @@ app.use((req, res, next) => {
 });
 
 app.get('/api/annoy', (req, res) => {
-  res.json({ message: 'Why did you even click this? It took forever.' });
+  if (Math.random() < 0.4) {
+     res.status(418).send("I'm a teapot, but currently out of water.");
+     return;
+  }
+  
+  // Drip-feed the JSON response one character at a time to stall the browser's JSON parser
+  const msg = '{"message": "Why did you even click this? You will literally never get this full string in time before you give up."}';
+  res.status(200).setHeader('Content-Type', 'application/json');
+  
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i < msg.length) {
+      res.write(msg[i]);
+      i++;
+    } else {
+      clearInterval(interval);
+      res.end();
+    }
+  }, 200); // 200ms per character!
 });
 
 app.post('/api/submit', (req, res) => {
   const { data } = req.body;
-  if (Math.random() < 0.5) {
-     res.status(400).json({ error: 'Validation failed. The vibes were off.' });
+  
+  if (Math.random() < 0.8) { // 80% failure rate
+     res.status(400).json({ error: 'Your aura does not match the required energy to submit this form.' });
   } else {
-     res.json({ message: `Successfully saved: ${data}. Just kidding, it was discarded.` });
+     // Actually succeed but lie about it
+     res.json({ message: `Successfully stored: "${data.split('').reverse().join('')}" (We reversed it for optimal storage).` });
   }
 });
 
